@@ -1,0 +1,40 @@
+# Build outputs
+build/
+Debug/
+Release/
+Objects/
+Listings/
+GetTemp_Hum/
+OLED_Stm32_W25QXX/
+*.o
+*.d
+*.obj
+*.elf
+*.axf
+*.hex
+*.bin
+*.map
+*.lst
+*.lnp
+*.dep
+*.htm
+*.html
+
+# Keil user/local files
+*.uvguix.*
+*.uvgui.*
+*.scvd
+*.bak
+*.log
+*_codex_build_log.txt
+build_log.txt
+flash_cli.log
+
+# Local/editor files
+.vscode/
+.settings/
+.DS_Store
+Thumbs.db
+
+# Nested repositories
+.git/
