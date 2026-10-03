@@ -119,6 +119,7 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:12px 0}
 .cityrow input{flex:1;min-width:0;font-family:inherit;font-size:11.5px;padding:4px 8px;
   border:1px solid rgba(148,163,184,.35);border-radius:6px;background:rgba(2,6,23,.5);color:#e2e8f0}
 .cityrow input:focus{outline:none;border-color:#38bdf8}
+.cityrow input::placeholder{color:#94a3b8;opacity:1}
 .mini{font-family:inherit;font-size:10.5px;padding:4px 10px;border-radius:6px;cursor:pointer;
   border:1px solid rgba(148,163,184,.35);background:rgba(148,163,184,.14);color:#e2e8f0;white-space:nowrap}
 .mini:hover{background:rgba(56,189,248,.22);border-color:#38bdf8}
@@ -171,14 +172,14 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:12px 0}
 .ledctl{display:flex;flex-direction:column;gap:8px}
 .ledctl .lbtn{padding:6px 4px}
 table.pin{width:100%;border-collapse:collapse;margin-top:2px;font-size:11px}
-table.pin th{text-align:left;font-size:9.5px;color:#7c8899;letter-spacing:.4px;
+table.pin th{text-align:left;font-size:9.5px;color:#55616f;letter-spacing:.4px;
 padding:4px 5px;border-bottom:1.5px solid var(--line);font-weight:700;white-space:nowrap}
 table.pin td{padding:4px 5px;border-bottom:1px solid #eef2f7;vertical-align:top;line-height:1.45}
 table.pin tr:hover td{background:#f7fafd}
 table.pin td.pin{font-family:ui-monospace,Menlo,monospace;font-weight:700;color:#0e7490;white-space:nowrap}
-table.pin td.no{color:#94a3b8;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.pin td.no{color:#55616f;font-variant-numeric:tabular-nums;white-space:nowrap}
 table.pin td.sig{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;color:#7c3aed;white-space:nowrap}
-table.pin td.src{color:#64748b;font-size:10px;font-family:ui-monospace,Menlo,monospace}
+table.pin td.src{color:#475569;font-size:10px;font-family:ui-monospace,Menlo,monospace}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:-1px}
 @media(max-width:1180px){.panel{width:366px}}
 @media(max-width:860px){.main{flex-direction:column}.panel{width:100%;border-left:0;border-top:1px solid var(--line);max-height:48%}}
@@ -2144,12 +2145,12 @@ function chipList(keys){
     return m?'<span class="chip" data-go="'+k+'">'+b.id+' 板 · '+m.n+'</span>':'';}).join('')||'<span class="chip">—</span>';
 }
 function pinTable(board,modId){
-  const rows=board.links.filter(l=>l.mod===modId);
+  const rows=modId?board.links.filter(l=>l.mod===modId):board.links;
   if(!rows.length)return'';
   return '<table class="pin"><tr><th>引脚</th><th>脚位</th><th>信号</th><th>源码依据</th></tr>'+
     rows.map(l=>'<tr><td class="pin"><span class="dot" style="background:'+hex(CLR[l.kind])+'"></span>'+l.pin+
       '</td><td class="no">#'+PINNO[l.pin]+'</td><td class="sig">'+l.sig+'</td><td class="src">'+l.ev+
-      '<br><span style="color:#94a3b8">'+l.note+'</span></td></tr>').join('')+'</table>';
+      '<br><span style="color:#55616f">'+l.note+'</span></td></tr>').join('')+'</table>';
 }
 function select(key){
   selected=key;
@@ -2196,8 +2197,8 @@ function select(key){
       '<button class="mini" id="wxRe">重新获取</button></div>'+
       '<div class="cityrow"><input id="wxCity" value="'+WX.city+'" placeholder="城市名，如 嘉兴 / 杭州 / Tokyo">'+
       '<button class="mini" id="wxGo">获取</button></div></div></div>'+
-      '<div class="note b">TFT 屏显示的就是这里的数据。联网成功时标 <b style="color:#16a34a">LIVE</b>；'+
-      '断网或跨域被拦时回落离线估算并标 <b style="color:#d97706">OFFLINE</b>，数值会明显标出是估算值。</div>'+
+      '<div class="note b">TFT 屏显示的就是这里的数据。联网成功时标 <b style="color:#15803d">LIVE</b>；'+
+      '断网或跨域被拦时回落离线估算并标 <b style="color:#b45309">OFFLINE</b>，数值会明显标出是估算值。</div>'+
       '<hr class="sep"><div class="kv"><div class="k">灯控面板 · A 板 3 路 + B 板 3 路</div><div class="v">'+
       '<div class="ledctl" id="ledCtl"></div></div></div>'+
       '<div class="note">点场景左上角的<b>「灯控」</b>按钮，或点这里的按钮，都会下发同一条 '+
@@ -2241,7 +2242,7 @@ function select(key){
     h+='<hr class="sep"><div class="kv"><div class="k">本板用到的 IO 口 · 共 '+used.length+' 个</div><div class="v">'+
       used.map(p=>'<code>'+p+'</code>').join(' ')+'</div></div>'+
       '<div class="kv"><div class="k">逐引脚对照表（全部 '+wires.length+' 根线）</div><div class="v">'+
-      pinTable(board,'mcu')+'</div></div>'+
+      pinTable(board)+'</div></div>'+
       '<div class="note">其余引脚（PA1 / PA8 / PA11 / PB2 / PB11 / PC13 等）源码中均未初始化，本页不画线。</div>';
   }else{
     h+='<hr class="sep"><div class="kv"><div class="k">引脚对照表</div><div class="v">'+pinTable(board,mid)+'</div></div>';
