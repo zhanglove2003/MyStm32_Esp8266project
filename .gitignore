@@ -19,6 +19,8 @@ OLED_Stm32_W25QXX/
 *.dep
 *.htm
 *.html
+# ...except the GitHub Pages entry point, which is HTML on purpose.
+!docs/*.html
 
 # Keil user/local files
 *.uvguix.*

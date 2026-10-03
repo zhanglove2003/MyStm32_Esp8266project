@@ -92,7 +92,7 @@
 
 #### A 板 · A_Sensor_Mqtt_Lora
 
-Keil target `GetTemp_Hum` · HSE 8MHz × PLL9 = 72MHz · 16 条连线
+Keil target `GetTemp_Hum` · HSE 8MHz × PLL9 = 72MHz · 16 条连线 · 16 个 IO 口
 
 | 模块 | 引脚 | 脚位 | 信号 | 说明 | 源码依据 |
 | --- | --- | --- | --- | --- | --- |
@@ -115,7 +115,7 @@ Keil target `GetTemp_Hum` · HSE 8MHz × PLL9 = 72MHz · 16 条连线
 
 #### B 板 · B_Lora_TFT
 
-Keil target `OLED_Stm32_W25QXX` · HSI/2 × PLL16 = 64MHz（无外部晶振） · 20 条连线
+Keil target `OLED_Stm32_W25QXX` · HSI/2 × PLL16 = 64MHz（无外部晶振） · 20 条连线 · 17 个 IO 口
 
 | 模块 | 引脚 | 脚位 | 信号 | 说明 | 源码依据 |
 | --- | --- | --- | --- | --- | --- |
