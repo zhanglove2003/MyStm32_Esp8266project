@@ -37,6 +37,9 @@
 │   ├── Drivers/               # CMSIS + STM32F1 HAL
 │   ├── MDK-ARM/               # Keil 工程 OLED_Stm32_W25QXX.uvprojx
 │   └── README.md              # B 节点详细说明
+├── docs/
+│   ├── index.html             # 3D 实物布线模型（单文件，离线可开）
+│   └── img/                   # 模型截图
 └── tests/
     └── test_led_protocol.c    # 主机侧协议解析测试
 ```
@@ -67,6 +70,78 @@
 | W25Qxx CS | PA3 | 独立片选 |
 | A39C LoRa RX | PA12 | 软串口接收 |
 | Debug UART | USART1 | 串口诊断输出 |
+
+> 上面两张是按模块归并的摘要；覆盖全部 36 条连线、带源码行号的完整对照表在下面的「逐引脚对照总表」。
+
+## 3D 实物布线模型
+
+仓库里带一份单文件、离线可开的 3D 实物布线模型（`docs/index.html`，Three.js 内联，无外部依赖）：**一根线 = 一个真实 IO 口**，点击任意部件会高亮它的全部连线，并在 LQFP48 封装上点亮对应脚位。
+
+- 在线交互：<https://zhanglove2003.github.io/MyStm32_Esp8266project/>
+- 或下载后直接双击 `docs/index.html`。不需要联网也能完整使用，只有 TFT 屏上的天气会回落到离线估算并标注 `OFFLINE`。
+
+![A/B 两块板的布线模型总览](docs/img/overview.png)
+
+| A 板 · 采集 + 上云 + 发送 | B 板 · 接收 + 本地显示 |
+| --- | --- |
+| ![A 板布线模型](docs/img/board-a.png) | ![B 板布线模型](docs/img/board-b.png) |
+
+## 逐引脚对照总表
+
+下面 36 条连线逐条对照过源码，「源码依据」一列给出文件名与行号，脚位为 LQFP48 封装第几脚。B 板的连线数多于引脚数，是因为 TFT 与 W25Qxx 共用同一组 SPI1 总线，SCK / MISO / MOSI 三根线各算两条。
+
+#### A 板 · A_Sensor_Mqtt_Lora
+
+Keil target `GetTemp_Hum` · HSE 8MHz × PLL9 = 72MHz · 16 条连线
+
+| 模块 | 引脚 | 脚位 | 信号 | 说明 | 源码依据 |
+| --- | --- | --- | --- | --- | --- |
+| ESP-01S | `PA0` | #10 | ESP_EN | GPIO 推挽输出<br>ESP8266 复位时序：拉低 250ms → 拉高 → 延时 1s | `esp8266.c:179-181` |
+| ESP-01S | `PA2` | #12 | USART2_TX | USART2_TX @115200<br>AT 指令与 TCP 数据的发送端 | `usart.c:72 · esp8266.c:63` |
+| ESP-01S | `PA3` | #13 | USART2_RX | USART2_RX @115200<br>+IPD 下行与 AT 回显的接收端（中断 RX） | `usart.c:77 · esp8266.c:19` |
+| 调试串口 | `PA9` | #30 | USART1_TX | USART1_TX @115200<br>调试日志输出 | `usart.c:57` |
+| 调试串口 | `PA10` | #31 | USART1_RX | USART1_RX @115200<br>调试口接收（未使用） | `usart.c:62` |
+| A39C LoRa | `PA12` | #33 | 软串口 TX | GPIO 推挽输出（软件 UART）<br>软件模拟 UART，SOFT_UART_BAUD = 9600 | `soft_uart_tx.c:5-9` |
+| MQ135 | `PB0` | #18 | ADC1_IN8 | 模拟输入 ADC1_IN8<br>气敏电阻分压采样，R0 校准后拟合 CO₂ | `gpio.c:62 · adc.c:22` |
+| DHT12 | `PB6` | #42 | I2C1_SCL | I2C1 时钟 @100kHz<br>DHTC12 温湿度读取 | `i2c.c:67,86` |
+| DHT12 | `PB7` | #43 | I2C1_SDA | I2C1 数据 @100kHz<br>DHTC12 温湿度读取 | `i2c.c:67,86` |
+| A39C LoRa | `PB12` | #25 | A39C_AUX | GPIO 上拉输入<br>模块忙标志；发送前阻塞等待其变高 | `soft_uart_tx.c:7-8,81-84` |
+| LED1 / 2 / 3 | `PB13` | #26 | LED1 | GPIO 推挽输出<br>高电平点亮；上电全灭 | `led_control.c:7` |
+| LED1 / 2 / 3 | `PB14` | #27 | LED2 | GPIO 推挽输出<br>高电平点亮；上电全灭 | `led_control.c:8` |
+| LED1 / 2 / 3 | `PB15` | #28 | LED3 | GPIO 推挽输出<br>高电平点亮；上电全灭 | `led_control.c:9` |
+| 8MHz 晶振 | `PD0` | #5 | OSC_IN | HSE 输入<br>8MHz 晶振，PLL×9 得 72MHz | `GetTemp_Hum.ioc PD0-OSC_IN` |
+| 8MHz 晶振 | `PD1` | #6 | OSC_OUT | HSE 输出<br>8MHz 晶振，PLL×9 得 72MHz | `GetTemp_Hum.ioc PD1-OSC_OUT` |
+| 复位按键 | `NRST` | #7 | NRST | 复位<br>按下拉低复位 | `—（标准复位电路）` |
+
+#### B 板 · B_Lora_TFT
+
+Keil target `OLED_Stm32_W25QXX` · HSI/2 × PLL16 = 64MHz（无外部晶振） · 20 条连线
+
+| 模块 | 引脚 | 脚位 | 信号 | 说明 | 源码依据 |
+| --- | --- | --- | --- | --- | --- |
+| W25Qxx | `PA3` | #13 | W25QXX_CS | GPIO 推挽输出（片选）<br>SPI Flash 片选，低有效 | `main.h W25QXX_CS_Pin=PA3` |
+| ST7735S TFT | `PA4` | #14 | TFT_CS | GPIO 推挽输出（片选）<br>TFT 片选，低有效 | `main.h TFT_CS_Pin=PA4` |
+| ST7735S TFT | `PA5` | #15 | SPI1_SCK | SPI1 时钟（AF 推挽）<br>SPI1 共用总线，同时挂 TFT 与 W25Qxx | `stm32f1xx_hal_msp.c:20-24` |
+| W25Qxx | `PA5` | #15 | SPI1_SCK | SPI1 时钟（共用总线）<br>与 TFT 并联，同一根 SCK | `stm32f1xx_hal_msp.c:20-24` |
+| ST7735S TFT | `PA6` | #16 | SPI1_MISO | SPI1 主入从出<br>SPI1 共用总线 | `stm32f1xx_hal_msp.c:26-29` |
+| W25Qxx | `PA6` | #16 | SPI1_MISO | SPI1 主入从出（共用总线）<br>与 TFT 并联 | `stm32f1xx_hal_msp.c:26-29` |
+| ST7735S TFT | `PA7` | #17 | SPI1_MOSI | SPI1 主出从入<br>SPI1 共用总线 | `stm32f1xx_hal_msp.c:20-24` |
+| W25Qxx | `PA7` | #17 | SPI1_MOSI | SPI1 主出从入（共用总线）<br>与 TFT 并联 | `stm32f1xx_hal_msp.c:20-24` |
+| 调试串口 | `PA9` | #30 | USART1_TX | USART1_TX @9600<br>每秒诊断输出：W25 / FONT / IMG / K1 / K2 / PAGE | `main.c:441-442` |
+| 调试串口 | `PA10` | #31 | USART1_RX | USART1_RX @9600<br>调试口接收（未使用） | `main.c:441-442` |
+| A39C LoRa | `PA12` | #33 | 软串口 RX | GPIO 上拉输入（软件 UART）<br>轮询式软件 UART，SOFT_UART_BAUD = 9600 | `soft_uart_rx.c:3-7` |
+| ST7735S TFT | `PB0` | #18 | TFT_DC | GPIO 推挽输出<br>数据 / 命令选择 | `main.h TFT_DC_Pin=PB0` |
+| ST7735S TFT | `PB1` | #19 | TFT_RES | GPIO 推挽输出<br>屏幕硬复位 | `main.h TFT_RES_Pin=PB1` |
+| 按键 K1 / K2 | `PB8` | #45 | K1 | GPIO 上拉输入<br>按下为低；切 HOME 页并推进动画帧；20ms 消抖 | `main.c:52-54` |
+| 按键 K1 / K2 | `PB9` | #46 | K2 | GPIO 上拉输入<br>按下为低；切 ENV 页刷新数值；20ms 消抖 | `main.c:52-54` |
+| ST7735S TFT | `PB10` | #21 | TFT_BLK | GPIO 输出（.ioc 标注）<br>背光；.ioc 标为输出，但 MX_GPIO_Init() 未初始化它 | `OLED_Stm32_W25QXX.ioc PB10` |
+| A39C LoRa | `PB12` | #25 | A39C_AUX | GPIO 上拉输入<br>模块忙标志 | `soft_uart_rx.c:5-6,62-65` |
+| LED1 / 2 / 3 | `PB13` | #26 | LED1 | GPIO 推挽输出<br>高电平点亮；上电全灭 | `led_control.c:7` |
+| LED1 / 2 / 3 | `PB14` | #27 | LED2 | GPIO 推挽输出<br>高电平点亮；上电全灭 | `led_control.c:8` |
+| LED1 / 2 / 3 | `PB15` | #28 | LED3 | GPIO 推挽输出<br>高电平点亮；上电全灭 | `led_control.c:9` |
+### 为什么分成两块板
+
+同一个引脚在两块板上功能冲突：`PB0` 在 A 板是 MQ135 的 `ADC1_IN8`（模拟输入），在 B 板是 `TFT_DC`（推挽输出）。硬合成一块板就无法做到「一个 IO 口一根线、不错连」，因此按实物分成两块板并排建模。
 
 ## Configuration
 
