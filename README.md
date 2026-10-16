@@ -83,9 +83,9 @@
 | --- | --- |
 | ![双节点系统实拍](docs/img/real-system.jpg) | ![TFT 环境参数显示](docs/img/real-tft.jpg) |
 
-| A/B 节点共用的 LoRa 链路与 TFT | 传感器与显示模块特写 |
+| A/B 节点共用的 LoRa 链路与 TFT | A 节点数据采集端初始搭建 |
 | --- | --- |
-| ![LoRa 链路实拍](docs/img/real-lora.jpg) | ![传感器特写](docs/img/real-sensor.jpg) |
+| ![LoRa 链路实拍](docs/img/real-lora.jpg) | ![数据采集端初始搭建](docs/img/real-sensor.jpg) |
 
 TFT 屏上显示 `温度 / 湿度 / 烟雾浓度` 三项实时数据，右下角为开机动画帧。
 
